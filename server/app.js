@@ -12,12 +12,48 @@ const passport = require('passport');
 const GitHubStrategy = require('passport-github').Strategy;
 const OAuth = require('oauth'); // 引入 oauth 模块，用于修改请求端点
 const mysql = require('mysql2/promise');
+app.use(
+    session({
+        secret: 'your-secret-key', // 替换为强密钥
+        resave: false,
+        saveUninitialized: true,
+        cookie: {
+            secure: false, // 仅在 HTTPS 下发送 Cookie
+            sameSite: 'lax', // 允许跨域携带 Cookie（需配合 HTTPS，开发环境可先用 'lax' 过渡）
+            httpOnly: true, // 防止 XSS 攻击，前端 JS 无法访问 Cookie
+
+
+        }
+    })
+);
 const pool = mysql.createPool({
     host: 'localhost',
     user: 'root',
     password: '2794840873',
     database: 'blogdb'
 });
+
+// 允许的来源列表
+const allowedOrigins = [
+    'https://fengguoheng.github.io', // GitHub Pages 域名
+    'http://localhost:8080', // 本地开发服务器（根据实际端口调整）
+    'https://tender-secure-bluegill.ngrok-free.app',
+    'http://192.168.110.199:8080',
+];
+
+// 配置 CORS
+app.use(cors({
+    origin: (origin, callback) => {
+        if (allowedOrigins.includes(origin) || !origin) {
+            callback(null, true); // 允许请求
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true // 若需发送 Cookie 等凭证
+}));
 (async () => {
     try {
         await sequelize.authenticate();
@@ -29,27 +65,13 @@ const pool = mysql.createPool({
         process.exit(1);
     }
 })();
-app.use(cors({
-    origin: 'http://192.168.110.199:8080',
-    credentials: true, // 允许发送凭据（如cookies）
-    methods: 'GET,POST,PUT,DELETE,OPTIONS', // 允许的HTTP方法
-}));
+
 app.use(morgan('dev'));
 app.use(helmet());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(
-    session({
-        secret: 'your-secret-key', // 替换为强密钥
-        resave: false,
-        saveUninitialized: true,
-        cookie: {
-            sameSite: 'lax', // 允许跨域携带 Cookie（需配合 HTTPS，开发环境可先用 'lax' 过渡）
-            httpOnly: true, // 防止 XSS 攻击，前端 JS 无法访问 Cookie
-            maxAge: 24 * 60 * 60 * 1000 // 会话过期时间（1 天）
-        }
-    })
-);
+app.use(express.json());
+
 // passport 中间件
 app.use(passport.initialize());
 app.use(passport.session());
@@ -86,36 +108,26 @@ app.get('/auth/github/callback',
                     'INSERT INTO sqlusers (username, password, createdAt, updatedAt) VALUES (?, ?, ?, ?)',
                     [username, password, createdAt, updatedAt]
                 );
-                console.log('用户信息插入成功，插入的 ID 为:', result.insertId);
+
                 userId = result.insertId;
             } else {
                 console.log('用户已存在，无需插入');
                 userId = rows[0].id; // 假设表中有 id 字段
             }
-            // 存储用户信息到会话
             req.session.userId = userId;
             req.session.username = username;
-            req.session.isLoggedIn = true;  // 标记用户已登录
-            console.log('用户信息存储到会话:', { userId: req.session.userId, username: req.session.username, session: req.session.isLoggedIn });
+            req.session.isLoggedIn = true;
 
-            res.redirect('http://192.168.110.199:8080/third');
+
+
+            // 重定向到前端页面并传递数据
+            res.redirect(`https://fengguoheng.github.io/shop/#/third?userId=${userId}&username=${username}`);
         } catch (error) {
             console.error('插入用户信息到数据库时出错:', error);
             res.status(500).send('服务器内部错误');
         }
     }
 );
-app.get('/check', (req, res) => {
-    if (req.session.isLoggedIn) {
-        res.json({
-            isLoggedIn: true,
-            userId: req.session.userId,
-            username: req.session.username
-        });
-    } else {
-        res.json({ isLoggedIn: false });
-    }
-});
 app.use('/api', userRoutes);
 app.use((err, req, res, next) => {
     console.error('全局错误:', err);
@@ -129,7 +141,7 @@ passport.use(new GitHubStrategy({
     oauth2: kkgithubOAuth2, // 自定义 OAuth2 实例
     clientID: 'Ov23liqyjvZ8blf0Nqmr', // 明确保留 clientID
     clientSecret: '2ac73990a8e357d52370c8c8b0d12a13b1f185be', // 明确保留 clientSecret
-    callbackURL: 'http://192.168.110.199:3000/auth/github/callback',
+    callbackURL: 'https://tender-secure-bluegill.ngrok-free.app/auth/github/callback',
     // 使得 Strategy 信任所有代理设置
     proxy: true//回调地址
 }, (accessToken, refreshToken, profile, done) => {//待丰富
@@ -143,5 +155,5 @@ passport.deserializeUser((user, done) => done(null, user));
 
 const port = 3000;
 app.listen(port, () => {
-    console.log(`Server running at http://192.168.110.199:${port}/`);
+    console.log(`Server running at http://192.168.240.121:${port}/`);
 });

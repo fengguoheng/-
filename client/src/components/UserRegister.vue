@@ -1,21 +1,44 @@
 <template>
     <el-container class="register-container">
         <el-main>
-            <h1>注册账号</h1>
-            <el-form ref="formRef" :model="formData" label-width="80px">
-                <el-form-item label="用户名" prop="username">
-                    <el-input v-model="formData.username"></el-input>
-                </el-form-item>
-                <el-form-item label="密码" prop="password">
-                    <el-input v-model="formData.password" type="password"></el-input>
-                </el-form-item>
-                <el-form-item label="邮箱" prop="email">
-                    <el-input v-model="formData.email"></el-input>
-                </el-form-item>
-                <el-form-item>
-                    <el-button type="primary" @click="handleRegister">注册</el-button>
-                </el-form-item>
-            </el-form>
+            <el-card class="register-card">
+                <template #header>
+                    <h1>注册账号</h1>
+                </template>
+                <el-form ref="formRef" :model="formData">
+                    <el-form-item>
+                        <el-input 
+                            v-model="formData.username" 
+                            placeholder="请输入用户名"
+                        >
+                        </el-input>
+                    </el-form-item>
+                    <el-form-item>
+                        <el-input 
+                            v-model="formData.password" 
+                            type="password" 
+                            placeholder="请输入密码"
+                        >
+                        </el-input>
+                    </el-form-item>
+                    <el-form-item>
+                        <el-input 
+                            v-model="formData.email" 
+                            placeholder="请输入邮箱"
+                        >
+                        </el-input>
+                    </el-form-item>
+                    <el-form-item>
+                        <el-button 
+                            type="primary" 
+                            style="width: 100%; text-align: center;" 
+                            @click="handleRegister"
+                        >
+                            注册
+                        </el-button>
+                    </el-form-item>
+                </el-form>
+            </el-card>
         </el-main>
     </el-container>
 </template>
@@ -24,6 +47,7 @@
 import { ref } from 'vue';
 import { onBeforeRouteLeave, onBeforeRouteUpdate } from 'vue-router';
 import { ElMessage } from 'element-plus';
+import apiUrl from '../config.js';
 
 // 表单数据
 const formData = ref({
@@ -31,9 +55,6 @@ const formData = ref({
     password: '',
     email: '',
 });
-
-// 表单引用
-const formRef = ref(null);
 
 // 组件内守卫 - 离开当前组件时触发
 onBeforeRouteLeave((to, from) => {
@@ -56,7 +77,7 @@ const handleRegister = () => {
     }
 
     // 发送注册请求到后端
-    fetch('/api/api/register', {
+    fetch(`${apiUrl}/api/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData.value),
@@ -83,7 +104,6 @@ const handleRegister = () => {
             ElMessage.error('注册请求出错，请稍后重试');
         });
 };
-
 </script>
 
 <style scoped>
@@ -93,5 +113,18 @@ const handleRegister = () => {
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    position: relative;
+}
+
+.register-card {
+    width: 300px;
+    padding: 20px;
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    background-color: white;
+}
+
+.el-form-item {
+    margin-bottom: 16px;
 }
 </style>

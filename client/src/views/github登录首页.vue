@@ -2,7 +2,7 @@
     <div class="nav-container">
         <div class="header-section">
             <h1 class="title">博·客·系·统</h1>
-            <span  v-if="userInfo" class="designer">欢迎{{userInfo.username}}</span>
+            <span v-if="userInfo" class="designer">欢迎{{ username }}</span>
         </div>
         <el-menu class="nav-menu" mode="horizontal" :default-active="activeIndex" @select="handleSelect">
             <el-menu-item index="home">首页</el-menu-item>
@@ -40,9 +40,12 @@
     <button ref="musicBtnRef" class="music-btn" @click="playMusic()">播放音乐</button>
 </template>
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import axios from 'axios';
 import router from '../router/index.js';
+import apiUrl from '../config.js';
+
+import { useRoute } from 'vue-router';
 
 // 合并重复导入，优化代码结构
 const isLoggedIn = ref(false);
@@ -50,14 +53,18 @@ const userInfo = ref({});
 const activeIndex = ref('home'); // 设置默认选中项
 const sortedBlogs = ref([]); // 存储排序后的博客数据
 const extractedData = ref([]);
+const username = ref('');
+ // 引入钩子
 
+// 定义 route
+const route = useRoute();
 
 // 组件挂载时触发
 
 const handleSelect = (index) => {
     console.log('当前选中：', index);
-    if(index === 'home'){
-        window.location.href = '/home';
+    if (index === 'home') {
+        router.push('/home');
     }
     if (index === 'exit') {
         // 可在此处添加退出登录等逻辑
@@ -65,9 +72,9 @@ const handleSelect = (index) => {
 };
 
 const fetchUserBlogs = async () => {
-    try {  
-        const response = await axios.get(`api/api/personBlogs/${userInfo.value.username}`); 
-        sortedBlogs.value = response.data.a;
+    try {
+        const response = await axios.get(`${apiUrl}/api/getBlogs`);
+        sortedBlogs.value = response.data;
         extractedData.value = sortedBlogs.value.map((blogItem) => ({
             date: blogItem.date,
             title: blogItem.title,
@@ -83,17 +90,13 @@ const toWrite = () => {
 }
 onMounted(async () => {
     try {
-        const response = await axios.get('api/check', {
-            withCredentials: true // 携带 cookie 信息
-        });
-        if (response.data.isLoggedIn) {
-            isLoggedIn.value = true;
-            userInfo.value = response.data;
-            fetchUserBlogs();
-        }
+        username.value = route.query.username || '';
+        localStorage.setItem('username', username.value);
+        fetchUserBlogs();
+
     } catch (error) {
         console.error('验证登录状态出错:', error);
-    } 
+    }
 });
 const toPerson = () => {
     router.push('/person'); // 使用 router.push 进行路由跳转

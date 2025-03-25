@@ -18,9 +18,10 @@
 </template>
 
 <script setup>
-import { ref,onMounted  } from 'vue';
+import { ref, onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
 import axios from 'axios';
+import apiUrl from '../config.js';
 
 // 表单数据
 const articleForm = ref({
@@ -36,7 +37,7 @@ const rules = ref({
 
 // 模板引用
 const formRef = ref(null);
-const username=ref('');
+const username = ref('');
 const userInfo = ref({});
 const isLoggedIn = ref(false);
 
@@ -47,7 +48,7 @@ const submitArticle = async () => {
         if (valid) {
             try {
                 // 替换为实际的接口地址
-                const response = await axios.post(`/api/api/submitBlogs/${ userInfo.value.username}`, articleForm.value);
+                const response = await axios.post(`${apiUrl}/api/submitBlogs/${username.value}`, articleForm.value);
                 if (response.status === 200) {
                     ElMessage.success('文章提交成功');
                     articleForm.value = { title: '', content: '' };
@@ -70,9 +71,10 @@ const cancel = () => {
     history.back();
 };
 onMounted(async () => {
-    try { username.value = localStorage.getItem('username'); // 获取用户名并赋值给响应式变量
-        
-        const response = await axios.get('api/check', {
+    try {
+        username.value = localStorage.getItem('username'); // 获取用户名并赋值给响应式变量
+
+        const response = await axios.get(`${apiUrl}/check`, {
             withCredentials: true // 携带 cookie 信息
         });
         if (response.data.isLoggedIn) {
@@ -82,10 +84,10 @@ onMounted(async () => {
     } catch (error) {
         console.error('验证登录状态出错:', error);
     }
-  
 
-    
-    
+
+
+
 });
 </script>
 

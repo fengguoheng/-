@@ -3,9 +3,9 @@ import { createRouter, createWebHistory, createWebHashHistory } from 'vue-router
 
 // 路由懒加载
 const Login = () => import('../components/UserLogin.vue');
-const UserInfo = () => import('../components/UserInfo.vue');
+
 const Home = () => import('../views/Home.vue');
-const Dashboard = () => import('../views/Dashboard.vue');
+
 
 const routes = [
     {
@@ -25,29 +25,6 @@ const routes = [
         component: Home,//components:() => import('../components/UserLogin.vue');
     },
     {
-        path: '/user',
-        name: 'User',
-        component: () => import('../views/User.vue'),
-        children: [
-            // 嵌套路由
-            {
-                path: 'info',
-                name: 'UserInfo',
-                component: UserInfo
-            },
-            {
-                path: 'dashboard',
-                name: 'Dashboard',
-                component: () => import('../views/Dashboard.vue')
-            }
-        ]
-    },
-    {
-        path: '/user/:id', // 动态路由
-        name: 'UserDetail',
-        component: () => import('../views/UserDetail.vue')
-    }
-    , {
         path: '/register', // 动态路由
         name: 'register',
         component: () => import('../components/UserRegister.vue')
@@ -66,11 +43,59 @@ const routes = [
         path: '/third',
         name: 'third',
         component: () => import('../views/github登录首页.vue')
+    },
+    {
+        path: '/shop/', // 新增路径，关联同一组件
+        name: 'ShopLogin', // 可自定义路由名
+        component: Login // 关联 UserLogin 组件
+    },
+    {
+        path: '/vistor',
+        name: 'vistor',
+        component: () => import('../views/游客首页.vue')
+    },
+    {
+        path: '/blog',
+        name: 'blog',
+        // 修改为正确的懒加载形式
+        component: () => import('../views/博客.vue')
+    },
+    {
+        path: '/search',
+        name: 'search',
+        component: () => import('../views/搜索.vue')
+    },
+    {
+        path: '/friends',
+        name: 'friends',
+        component: () => import('../views/好友.vue')
+
+    },
+    {
+        path: '/another/:username',
+        name: 'another',
+        component: () => import('../views/其他人的主页.vue')
+    },
+    {
+        path: '/addFriend/:username', // 动态路由参数
+        name: 'addFriend',
+        component: () => import('../views/添加好友.vue') // 懒加载组件
+
+    },
+    {
+        path: '/myblog',
+        name: 'myblog',
+        component: () => import('../views/我的博客.vue')
+    },
+    {
+        path:'/message',
+        name:'message',
+        component:() => import('../views/消息通知.vue')
     }
 ];
 
 const router = createRouter({
-    history: createWebHistory(),
+    history: createWebHashHistory('/shop/'),
     routes
 });
 
